@@ -98,9 +98,9 @@ if st.button('Predict Price'):
             
             if transaction_type == 'Rent':
                 rent = round((float(formatted_price) /20 ), 2)
-                result = f"A {bedrooms}-bedroom {title} in {location} is estimated to be around <span style='font-size: 24px; font-weight: bold;'>{rent}</span> million/year."
+                result = f"A {bedrooms}-bedroom {title} in {location} is estimated to be around <span style='font-size: 24px; font-weight: bold;'>₦{rent}</span> million/year."
             else:  # Purchase
-                result = f"A {bedrooms}-bedroom {title} detached in {location} is estimated to be around <span style='font-size: 24px; font-weight: bold;'>{formatted_price}</span> million."
+                result = f"A {bedrooms}-bedroom {title} detached in {location} is estimated to be around <span style='font-size: 24px; font-weight: bold;'>₦{formatted_price}</span> million."
                 
             # Display the result in a box with dark background and white text
             st.markdown(
