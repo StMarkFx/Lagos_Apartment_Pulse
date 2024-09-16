@@ -97,7 +97,7 @@ if st.button('Predict Price'):
             formatted_price = f"{price:,.1f}"
             
             if transaction_type == 'Rent':
-                rent = round((float(formatted_price) /10 ), 2)
+                rent = round((float(formatted_price) /20 ), 2)
                 result = f"A {bedrooms}-bedroom {title} in {location} is estimated to be around <span style='font-size: 24px; font-weight: bold;'>{rent}</span> million/year."
             else:  # Purchase
                 result = f"A {bedrooms}-bedroom {title} detached in {location} is estimated to be around <span style='font-size: 24px; font-weight: bold;'>{formatted_price}</span> million."
