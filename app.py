@@ -3,6 +3,10 @@ import pandas as pd
 import pickle
 import os
 
+# Initialize session state for storing the previous prediction
+if 'prediction_done' not in st.session_state:
+    st.session_state.prediction_done = False  # To check if prediction has been made
+
 # Load the model
 model_path = './lagos_pred_model.pkl'
 if os.path.exists(model_path):
@@ -12,16 +16,13 @@ else:
     st.error(f"Model file '{model_path}' not found. Please ensure the file is uploaded correctly.")
     model = None
 
-
 # Streamlit app
 st.title('Lagos Apartment Pulse')
-
 
 # Sidebar for additional information and feedback
 st.sidebar.header('Welcome to Lagos Apartment Pulse')
 st.sidebar.write("Hi! Lagos Apartment Pulse is a web app where you can predict the estimated price of apartments in cities all over Lagos based on the features you want.")
 st.sidebar.write("This app is brought to you by St. Mark Adebayo.")
-st.sidebar.write("St. Mark Adebayo is a data scientist and a student of the Obafemi Awolowo University, Ile-Ife. He is currently a Data Science Fellow at 3MTT Nigeria, and this project is his August Knowledge Showcase.")
 st.sidebar.write("Did you find this app useful? Share your experience with a comment below:")
 
 # Feedback form
@@ -29,9 +30,7 @@ with st.sidebar.form(key='feedback_form'):
     name = st.text_input('Your Name')
     message = st.text_area('Your Comment')
     submit_button = st.form_submit_button(label='Send')
-
     if submit_button:
-        # Save feedback to a file
         with open('feedback.txt', 'a') as f:
             f.write(f"Name: {name}\nComment: {message}\n\n")
         st.sidebar.write("Thank you for your feedback!")
@@ -52,19 +51,19 @@ title_clusters = [
 col1, col2 = st.columns(2)
 
 with col1:
-    location = st.selectbox('Location', location_clusters)
+    location = st.selectbox('Location', location_clusters, key='location')
 
 with col2:
-    transaction_type = st.radio('Transaction Type', ['Rent', 'Purchase'])
+    transaction_type = st.radio('Transaction Type', ['Rent', 'Purchase'], key='transaction_type')
 
 # Side-by-side layout for Bedrooms and Title
 col3, col4 = st.columns(2)
 
 with col3:
-    bedrooms = st.number_input('Bedrooms', min_value=0, max_value=10, value=1)
+    bedrooms = st.number_input('Bedrooms', min_value=0, max_value=10, value=1, key='bedrooms')
 
 with col4:
-    title = st.selectbox('Title', title_clusters)
+    title = st.selectbox('Title', title_clusters, key='title')
 
 # Encode transaction type
 transaction_encoded = 1 if transaction_type == 'Rent' else 0
@@ -79,7 +78,6 @@ input_data = {
     'transaction_type': [transaction_encoded],
     'location_encoded': [location_encoded],  # Assuming this is how location was encoded
     'title_encoded': [title_encoded],         # Assuming this is how title was encoded
-    # Add a placeholder for the missing feature
     'missing_feature': [0]  # Replace with appropriate value if needed
 }
 
@@ -93,15 +91,17 @@ if st.button('Predict Price'):
             # Make prediction
             prediction = model.predict(input_df)
             price = prediction[0]
-            # Format the price with one decimal place
             formatted_price = f"{price:,.1f}"
             
             if transaction_type == 'Rent':
-                rent = round((float(formatted_price) /20 ), 1)
-                result = f"A {bedrooms}-bedroom {title} in {location} is estimated to be around <span style='font-size: 24px; font-weight: bold;'>₦{rent}</span> million/year."
+                rent = round((float(formatted_price) / 20), 1)
+                result = f"A {bedrooms}-bedroom {title} in {location} is estimated to be around ₦{rent} million/year."
             else:  # Purchase
-                result = f"A {bedrooms}-bedroom {title} detached in {location} is estimated to be around <span style='font-size: 24px; font-weight: bold;'>₦{formatted_price}</span> million."
-                
+                result = f"A {bedrooms}-bedroom {title} detached in {location} is estimated to be around ₦{formatted_price} million."
+            
+            # Store the state to indicate a prediction has been made
+            st.session_state.prediction_done = True
+            
             # Display the result in a box with dark background and white text
             st.markdown(
                 f"""
@@ -113,10 +113,14 @@ if st.button('Predict Price'):
                 """,
                 unsafe_allow_html=True
             )
-            
-
-            
         except ValueError as e:
             st.error(f"An error occurred: {e}")
     else:
         st.error("Model is not loaded. Please upload the model file.")
+
+# Clear the prediction state if any of the input features are changed
+if st.session_state.prediction_done:
+    # If any of the inputs are changed, reset the prediction state
+    if st.session_state.location != location or st.session_state.title != title or \
+       st.session_state.bedrooms != bedrooms or st.session_state.transaction_type != transaction_type:
+        st.session_state.prediction_done = False
